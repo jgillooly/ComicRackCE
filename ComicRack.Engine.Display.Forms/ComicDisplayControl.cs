@@ -2230,21 +2230,46 @@ namespace cYo.Projects.ComicRack.Engine.Display.Forms
 			{
 				return;
 			}
-			int[] array = pageNumbers.Where((int n) => n >= 0).ToArray();
-			if (array.Length == 0 || currentPageOverlayHash == DisplayHash)
+			int[] array = pageNumbers.Where((int n) => n >=0).ToArray();
+			if (array.Length ==0 || currentPageOverlayHash == DisplayHash)
 			{
 				return;
 			}
 			currentPageOverlayHash = DisplayHash;
-			string number = ((array.Length == 1) ? (array[0] + 1).ToString() : $"{array[0] + 1}/{array[1] + 1}");
+			string number = ((array.Length ==1) ? (array[0] +1).ToString() : $"{array[0] +1}/{array[1] +1}");
 			string text = ComicBook.FormatNumber(number, Book.IsIndexRetrievalCompleted ? Book.ProviderPageCount : (-1));
 			if (CurrentPageShowsName)
 			{
 				text += "<small>";
-				text = text.AppendWithSeparator("<br/>", Book.GetImageName(Book.Comic.TranslatePageToImageIndex(array[0]), noPath: true).ToXmlString());
-				if (array.Length > 1)
+				for (int i =0; i < array.Length; i++)
 				{
-					text = text.AppendWithSeparator("<br/>", Book.GetImageName(Book.Comic.TranslatePageToImageIndex(array[1]), noPath: true).ToXmlString());
+					try
+					{
+						// Prefer bookmark name if present, otherwise fall back to image name
+						var pageIndex = array[i];
+						string line = string.Empty;
+						try
+						{
+							var cpi = Book.Comic.GetPage(pageIndex);
+							if (!string.IsNullOrEmpty(cpi.Bookmark))
+							{
+								line = cpi.Bookmark;
+							}
+						}
+						catch
+						{
+							// ignore and fallback to image name
+						}
+						if (string.IsNullOrEmpty(line))
+						{
+							line = Book.GetImageName(Book.Comic.TranslatePageToImageIndex(pageIndex), noPath: true);
+						}
+						text = text.AppendWithSeparator("<br/>", line.ToXmlString());
+					}
+					catch
+					{
+						// ignore per original behavior
+					}
 				}
 				text += "</small>";
 			}
@@ -2833,7 +2858,7 @@ namespace cYo.Projects.ComicRack.Engine.Display.Forms
 			bool flag3 = oldOut.Config.Rotation != 0 || display.Config.Rotation != ImageRotation.None;
 			bool flag4 = !flag2 || flag3;
 			Rectangle rectangle;
-			if (!base.IsConstantBackground || flag3)
+			if (!base.IsConstantBackground || flag2)
 			{
 				rectangle = base.ClientRectangle;
 			}
